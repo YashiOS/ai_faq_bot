@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens. Components use the semantic Tailwind colors below
+ * (bg-surface, text-muted, border-line, ...) so dark mode is automatic.
+ */
+:root {
+  --bg: #f8f7f5;
+  --surface: #ffffff;
+  --surface-muted: #f2f1ee;
+  --line: #e6e4df;
+  --line-strong: #d5d2cb;
+  --ink: #1c1b19;
+  --muted: #5d5a54;
+  --subtle: #9a968e;
+  --accent: #0d7468;
+  --accent-hover: #0a5f55;
+  --accent-fg: #ffffff;
+  --accent-soft: #e5f1ef;
+  --danger: #b42318;
+  --danger-soft: #fdf0ee;
+  --success: #15803d;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #131312;
+    --surface: #1a1a18;
+    --surface-muted: #232320;
+    --line: #2d2c29;
+    --line-strong: #3b3a36;
+    --ink: #ecebe7;
+    --muted: #aaa69e;
+    --subtle: #75726b;
+    --accent: #3db5a5;
+    --accent-hover: #5cc6b8;
+    --accent-fg: #0b1f1c;
+    --accent-soft: rgb(61 181 165 / 0.12);
+    --danger: #f97066;
+    --danger-soft: rgb(249 112 102 / 0.1);
+    --success: #4ade80;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-subtle: var(--subtle);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-soft: var(--accent-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-success: var(--success);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  --animate-fade-in: fade-in 0.25s ease-out both;
+  --animate-pulse-dot: pulse-dot 1.2s ease-in-out infinite;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes pulse-dot {
+  0%,
+  80%,
+  100% {
+    opacity: 0.25;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
