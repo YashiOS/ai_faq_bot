@@ -11,7 +11,12 @@ chroma_client = chromadb.PersistentClient(
     path="./chroma_db"
 )
 
-pdf_path = input("Enter the path to the PDF file: ")
+pdf_path = input("Enter the path to the PDF file: ").strip()
+
+if os.path.exists(pdf_path) is False:
+    print(f"File not found: {pdf_path}")
+    exit()
+
 
 pdf_name = os.path.basename(pdf_path)
 
@@ -36,40 +41,98 @@ collection = chroma_client.get_or_create_collection(
 
 
 reader = PdfReader(pdf_path)
+total_pages = len(reader.pages)
 
 text = ""
 
-for page in reader.pages:
+def create_chunks(text, chunk_size=800, overlap=150):
+    words = text.split()
+    chunks = []
+    start = 0
+
+    while start < len(words):
+        end = start + chunk_size
+        chunk = " ".join(words[start:end])
+        if chunk:
+            chunks.append(chunk)
+        start += chunk_size - overlap
+
+    return chunks
+
+all_chunks = []
+global_chunk_id = 0
+
+
+for page_number, page in enumerate(reader.pages, start=1):
 
     page_text = page.extract_text()
 
-    if page_text:
-        text += page_text + "\n"
+    if not page_text:
+        print(f"Warning: No text found on page {page_number}")
+        continue
+
+    page_text = page_text.strip()
+
+    page_chunks = create_chunks(
+        page_text,
+        chunk_size=800,
+        overlap=150
+    )
+
+    for chunk_index, chunk in enumerate(page_chunks):
+        all_chunks.append({
+                "id": str(global_chunk_id),
+
+                "text": chunk,
+
+                "metadata": {
+                    "document": pdf_name,
+                    "page": page_number,
+                    "chunk": chunk_index,
+                    "global_chunk_id": global_chunk_id
+                }
+            })
+        
+        global_chunk_id += 1
+
+print(
+    f"\nFound {len(all_chunks)} chunks."
+)
 
 
-chunks = [
-    chunk.strip()
-    for chunk in text.split("\n\n")
-    if chunk.strip()
-]
-
-
-print(f"Found {len(chunks)} chunks")
-
-
-for i, chunk in enumerate(chunks):
+for item in all_chunks:
 
     embedding_vector = model.encode(
-        chunk,
+        item["text"],
         normalize_embeddings=True
     ).tolist()
 
     collection.add(
-        ids=[str(i)],
-        documents=[chunk],
-        embeddings=[embedding_vector]
+
+        ids=[
+            item["id"]
+        ],
+
+        documents=[
+            item["text"]
+        ],
+
+        embeddings=[
+            embedding_vector
+        ],
+
+        metadatas=[
+            item["metadata"]
+        ]
     )
 
-    print(f"Stored chunk {i + 1}/{len(chunks)}")
+print("\n====================================")
+print("✅ PDF ingestion completed")
+print("====================================")
 
+print(f"Document  : {pdf_name}")
+print(f"Pages     : {total_pages}")
+print(f"Chunks    : {len(all_chunks)}")
 print(f"Collection: {collection_name}")
+
+print("====================================")

@@ -9,6 +9,7 @@ client = OpenAI(
     api_key="lm-studio"
 )
 
+TOP_K=3
 embedding_model = SentenceTransformer("BAAI/bge-small-en-v1.5")
 
 
@@ -16,7 +17,7 @@ chroma_client = chromadb.PersistentClient(
     path="./chroma_db"
 )
 
-pdf_path = input("Enter the path to the PDF file: ")
+pdf_path = input("Enter the path to the PDF file: ").strip()
 
 pdf_name = os.path.basename(pdf_path)
 
@@ -31,7 +32,7 @@ collection = chroma_client.get_or_create_collection(
 )
 
 
-question = input("\nPlease enter your question: ")
+question = input("\nPlease enter your question: ").strip()
 
 
 question_vector = embedding_model.encode(
@@ -42,31 +43,80 @@ question_vector = embedding_model.encode(
 
 results = collection.query(
     query_embeddings=[question_vector],
-    n_results=3
+    n_results=TOP_K
 )
 
 
 retrieved_documents = results["documents"][0]
+retrieved_metadata = results["metadatas"][0]
+retrieved_distances = results.get(
+    "distances",
+    [[]]
+)[0]
 
-context = "\n\n".join(retrieved_documents)
+
+context_parts = []
+
+for index, document in enumerate(retrieved_documents):
+    metadata = retrieved_metadata[index]
+
+    page = metadata.get("page", "Unknown")
+    document_name = metadata.get("document_name", pdf_name)
+    chunk_number = metadata.get("chunk", "Unknown")
+
+    context_parts.append(
+
+        f"""
+        SOURCE {index + 1}
+
+        Document:
+        {document_name}
+
+        Page:
+        {page}
+
+        Chunk:
+        {chunk_number}
+
+        Content:
+        {document}
+        """
+    )
+
+context = "\n".join(context_parts)    
 
 prompt = f"""
-You are an AI assistant answering questions about a PDF document.
+You are an AI assistant that answers questions
+about a PDF document.
 
-Use ONLY the information provided in the document context below.
+IMPORTANT RULES:
 
-If the answer cannot be found in the provided context,
-say:
+1. Use ONLY the information provided in the
+   document context.
+
+2. Do NOT use your general knowledge.
+
+3. Do NOT invent or assume information.
+
+4. If the answer cannot be found in the provided
+   context, say exactly:
 
 "I couldn't find that information in the document."
 
-Document context:
+5. Give a clear and concise answer.
+
+6. Do not mention information that is not supported
+   by the provided context.
+
+
+DOCUMENT CONTEXT:
+
 {context}
 
-User question:
-{question}
 
-Answer clearly and briefly.
+USER QUESTION:
+
+{question}
 """
 
 
@@ -91,3 +141,27 @@ print("\n🤖 AI Assistant:")
 print(
     response.choices[0].message.content
 )
+
+shown_sources = set()
+
+for item in retrieved_metadata:
+    document_name = item.get("document", pdf_name)
+    page = item.get("page", "Unknown")
+
+
+    source_key = (document_name, page)
+
+    if source_key in shown_sources:
+        continue    
+
+    shown_sources.add(source_key)
+
+    print(
+        f"📄 {document_name}"
+    )
+
+    print(
+        f"   Page {page}"
+    )
+
+    print()
