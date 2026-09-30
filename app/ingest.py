@@ -1,11 +1,3 @@
-"""
-PDF ingestion as a background job.
-
-Ported from the original pdf_ingest.py CLI script. Same chunking,
-metadata and collection naming, but it reports its current stage so
-the frontend can show real progress while the document is processed.
-"""
-
 import io
 import logging
 import threading
@@ -26,7 +18,7 @@ CHUNK_SIZE = 800
 CHUNK_OVERLAP = 150
 
 
-# Stages reported to the frontend, in order.
+
 STAGE_UPLOADED = "uploaded"
 STAGE_EXTRACTING = "extracting"
 STAGE_CHUNKING = "chunking"

@@ -29,8 +29,8 @@ Load the Gemma model and start the local server on `http://127.0.0.1:1234`.
 ### 2. Backend (from the repo root)
 
 ```bash
-source venv/bin/activate
-pip install python-multipart   # needed for file uploads, if not already installed
+source .venv/bin/activate
+pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8000
 ```
 

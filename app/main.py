@@ -37,23 +37,7 @@ class QuestionRequest(BaseModel):
     question: str
 
     collection_name: str
-
-
-@app.get("/")
-def root():
-
-    return {
-        "message": "AI FAQ Bot API is running"
-    }
-
-
-@app.get("/health")
-def health():
-
-    return {
-        "status": "healthy"
-    }
-
+    
 
 @app.post("/ask")
 def ask(request: QuestionRequest):
